@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Sign-in test</h1>
+  <button onclick="signIn()">Sign in with TEST1234</button>
+  <pre id="out"></pre>
+
+  <script>
+    async function signIn() {
+      const res = await fetch('/api/auth/signin.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: 'TEST1234' })
+      });
+      document.getElementById('out').textContent =
+        res.status + '\n' + JSON.stringify(await res.json(), null, 2);
+    }
+  </script>
+</body>
+</html>

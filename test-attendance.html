@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Attendance test</h1>
+  <button onclick="signInThenSubmit()">Sign in + submit</button>
+  <pre id="out"></pre>
+
+  <script>
+    const out = document.getElementById('out');
+    const log = (label, data) => {
+      out.textContent += `\n--- ${label} ---\n` + JSON.stringify(data, null, 2);
+    };
+
+    async function signInThenSubmit() {
+      out.textContent = '';
+
+      // 1. Sign in
+      const r1 = await fetch('/api/auth/signin.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: 'TEST1234' })
+      });
+      log('signin', await r1.json());
+      if (!r1.ok) return;
+
+      // 2. Submit attendance
+      const r2 = await fetch('/api/attendance.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          serviceName: 'Hour of Encounter',
+          date: '2026-09-13',
+          fields: { 'Adult-Onsite': 120, 'Kids': 40, 'Teens': 25 }
+        })
+      });
+      log('attendance', await r2.json());
+
+      // 3. Sign out
+      const r3 = await fetch('/api/auth/signout.php', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      log('signout', await r3.json());
+
+      // 4. Confirm auth is now rejected
+      const r4 = await fetch('/api/attendance.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          serviceName: 'Hour of Encounter',
+          date: '2026-09-13',
+          fields: { 'Adult-Onsite': 1 }
+        })
+      });
+      log('after signout (should be 401)', await r4.json());
+    }
+  </script>
+</body>
+</html>

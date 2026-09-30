@@ -1,0 +1,14 @@
+# Block direct browser access to config and db files
+<FilesMatch "^(config|db)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to the lib/ folder
+RedirectMatch 403 ^/api/lib/.*$
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
