@@ -2,7 +2,7 @@
 // public_html/api/lib/cors.php
 
 $allowedOrigins = [
-    // Local development
+    // Local dev
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 
@@ -20,7 +20,6 @@ if (in_array($origin, $allowedOrigins, true)) {
     header('Access-Control-Max-Age: 86400');
 }
 
-// Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;

@@ -13,10 +13,11 @@ if (($user['role'] ?? 'user') !== 'admin') {
 
 try {
     $stmt = $pdo->query("
-        SELECT id, code, role
+        SELECT id, code, label, role, is_active, expires_at
         FROM access_code
-        ORDER BY 
+        ORDER BY
             CASE role WHEN 'admin' THEN 0 ELSE 1 END,
+            is_active DESC,
             code ASC
     ");
     $codes = $stmt->fetchAll();

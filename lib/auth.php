@@ -28,11 +28,14 @@ function session_start_secure(): void {
 function session_login(array $user): void {
     session_start_secure();
     session_regenerate_id(true);
-   $_SESSION['user'] = [
-    'id'       => (int)$user['id'],
-    'code'     => $user['code'],
-    'role'     => $user['role'] ?? 'user',
-    'login_at' => time(),
+    $now = time();
+    $_SESSION['user'] = [
+        'id'        => (int)$user['id'],
+        'code'      => $user['code'],
+        'label'     => $user['label'] ?? null,
+        'role'      => $user['role'] ?? 'user',
+        'login_at'  => $now,
+        'last_seen' => $now,
     ];
 }
 
@@ -53,10 +56,17 @@ function current_user(): ?array {
     if (!$u) return null;
 
     $cfg = session_boot();
-    if (time() - (int)$u['login_at'] > $cfg['session_ttl']) {
+
+    // Idle timeout — has it been too long since the last request?
+    $lastSeen = (int)($u['last_seen'] ?? $u['login_at'] ?? 0);
+    if (time() - $lastSeen > $cfg['session_ttl']) {
         session_logout();
         return null;
     }
+
+    // Refresh idle timer
+    $_SESSION['user']['last_seen'] = time();
+
     return $u;
 }
 

@@ -15,9 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Method not allowed', 405);
 }
 
-$body = json_input();
-$code = trim((string)($body['code'] ?? ''));
-$role = trim((string)($body['role'] ?? 'user'));
+$body       = json_input();
+$code       = trim((string)($body['code'] ?? ''));
+$label      = trim((string)($body['label'] ?? ''));
+$role       = trim((string)($body['role'] ?? 'user'));
+$expires_at = trim((string)($body['expires_at'] ?? ''));
 
 // Validate code
 if ($code === '') {
@@ -33,34 +35,50 @@ if (!preg_match('/^[A-Za-z0-9_-]+$/', $code)) {
     json_error('Code may only contain letters, numbers, hyphens, and underscores', 400);
 }
 
+// Validate label
+if (strlen($label) > 120) {
+    json_error('Label must be 120 characters or fewer', 400);
+}
+
 // Validate role
 if (!in_array($role, ['user', 'admin'], true)) {
     json_error('Role must be "user" or "admin"', 400);
 }
 
+// Validate expires_at (optional)
+$expiresValue = null;
+if ($expires_at !== '') {
+    $ts = strtotime($expires_at);
+    if ($ts === false) {
+        json_error('Invalid expiry date', 400);
+    }
+    $expiresValue = date('Y-m-d H:i:s', $ts);
+}
+
 try {
-    // Check if code already exists
     $check = $pdo->prepare("SELECT id FROM access_code WHERE code = ?");
     $check->execute([$code]);
     if ($check->fetch()) {
         json_error('That code already exists', 409);
     }
 
-    // Insert
     $stmt = $pdo->prepare("
-        INSERT INTO access_code (code, role)
-        VALUES (?, ?)
+        INSERT INTO access_code (code, label, role, expires_at)
+        VALUES (?, ?, ?, ?)
     ");
-    $stmt->execute([$code, $role]);
+    $stmt->execute([$code, $label ?: null, $role, $expiresValue]);
 
     $newId = (int)$pdo->lastInsertId();
 
     json_response([
         'success' => true,
         'code'    => [
-            'id'   => $newId,
-            'code' => $code,
-            'role' => $role,
+            'id'         => $newId,
+            'code'       => $code,
+            'label'      => $label ?: null,
+            'role'       => $role,
+            'is_active'  => 1,
+            'expires_at' => $expiresValue,
         ],
     ], 201);
 } catch (PDOException $e) {

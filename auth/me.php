@@ -1,6 +1,6 @@
 <?php
 // public_html/api/auth/me.php
-require __DIR__ . '/../lib/cors.php'; 
+require __DIR__ . '/../lib/cors.php';
 require __DIR__ . '/../lib/json.php';
 require __DIR__ . '/../lib/auth.php';
 
@@ -11,8 +11,9 @@ if (!$u) {
 
 json_response([
     'user' => [
-        'id'   => $u['id'],
-        'code' => $u['code'],
-        'role' => $u['role'] ?? 'user',
+        'id'    => $u['id'],
+        'code'  => $u['code'],
+        'label' => $u['label'] ?? null,
+        'role'  => $u['role'] ?? 'user',
     ],
 ]);
